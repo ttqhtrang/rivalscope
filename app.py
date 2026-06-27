@@ -218,6 +218,36 @@ def health():
     return jsonify({"status": "ok", "credentials": bool(DFS_EMAIL and DFS_PASSWORD)})
 
 
+@app.route("/api/test-credentials")
+def test_credentials():
+    """Test DataForSEO credentials — mở /api/test-credentials trên browser để kiểm tra"""
+    if not DFS_EMAIL or not DFS_PASSWORD:
+        return jsonify({"ok": False, "error": "Chưa có credentials trong environment variables"}), 400
+
+    # Gọi endpoint nhẹ nhất của DataForSEO để kiểm tra auth
+    try:
+        r = requests.get(
+            "https://api.dataforseo.com/v3/dataforseo_labs/status",
+            auth=(DFS_EMAIL, DFS_PASSWORD),
+            timeout=10,
+        )
+        if r.status_code == 200:
+            return jsonify({"ok": True, "message": "Credentials hợp lệ!", "email": DFS_EMAIL})
+        else:
+            return jsonify({
+                "ok": False,
+                "status_code": r.status_code,
+                "email_used": DFS_EMAIL,
+                "response": r.text[:500],
+                "hint": (
+                    "401 = sai password. Vào dataforseo.com → Profile → "
+                    "đổi password hoặc kiểm tra lại biến DATAFORSEO_PASSWORD trên Render"
+                )
+            }), 400
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5050))
     print(f"\n🔭 RivalScope đang chạy → http://localhost:{port}\n")
