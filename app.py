@@ -29,22 +29,38 @@ MARKET_MAP = {
 # Topic rules (Vietnamese-first, fallback English)
 # ---------------------------------------------------------------------------
 TOPIC_RULES = [
+    # Xe cộ / phương tiện
+    ("Xe máy điện",        ["xe máy điện", "xe điện", "xe đạp điện", "scooter điện",
+                             "vin fast", "vinfast", "honda điện", "yamaha điện", "peugeot",
+                             "xe may dien", "xe dap dien"]),
+    ("Xe máy / Mô tô",     ["xe máy", "mô tô", "motor", "honda", "yamaha", "suzuki",
+                             "kawasaki", "wave", "exciter", "winner", "sh", "air blade",
+                             "xe so", "xe tay ga", "xe côn tay"]),
+    ("Ô tô / Xe hơi",      ["ô tô", "xe hơi", "xe oto", "sedan", "suv", "crossover",
+                             "toyota", "hyundai", "kia", "mazda", "ford", "mercedes", "bmw",
+                             "vios", "camry", "civic", "accent"]),
+    ("Xe đạp",             ["xe đạp", "xe dap", "đạp điện", "mountain bike", "road bike"]),
+
+    # Điện thoại / Công nghệ
     ("Điện thoại",         ["iphone", "samsung", "oppo", "xiaomi", "vivo", "realme", "pixel",
                              "điện thoại", "smartphone", "phone", "nokia"]),
     ("Laptop / Máy tính",  ["laptop", "macbook", "máy tính", "notebook", "surface",
                              "dell", "asus", "lenovo", "acer", "gaming pc"]),
-    ("Máy tính bảng",      ["ipad", "tablet", "máy tính bảng", "galaxy tab"]),
     ("Phụ kiện",           ["ốp lưng", "sạc", "cáp", "tai nghe", "airpods", "phụ kiện",
                              "case", "charger", "chuột", "bàn phím", "earphone"]),
     ("Tivi / Màn hình",    ["tivi", " tv ", "smart tv", "màn hình", "monitor", "oled", "qled"]),
     ("Điện máy gia dụng",  ["tủ lạnh", "máy giặt", "điều hoà", "máy lạnh", "lò vi sóng",
                              "nồi cơm", "bếp điện", "quạt điện", "máy hút bụi"]),
+
+    # Nội dung / Intent
     ("Review / So sánh",   ["review", "so sánh", "đánh giá", "có nên mua", "tốt nhất",
-                             "nên chọn", "nên mua", "so sanh", "danh gia", "comparison"]),
+                             "nên chọn", "nên mua", "so sanh", "danh gia", "comparison",
+                             "bảng giá", "thông số"]),
     ("Giá / Mua sắm",      ["giá", "mua", "bán", "khuyến mãi", "giảm giá", "trả góp",
                              "giá tốt", "deal", "ưu đãi", "flash sale", "price", "buy", "cheap"]),
-    ("Sửa chữa / Hỗ trợ", ["sửa", "thay màn", "thay pin", "lỗi", "không lên nguồn",
-                             "hư", "bị vỡ", "cách fix", "khắc phục", "repair", "fix"]),
+    ("Sửa chữa / Hỗ trợ", ["sửa", "thay", "lỗi", "không lên nguồn", "hư", "bị vỡ",
+                             "cách fix", "khắc phục", "repair", "fix", "bảo dưỡng",
+                             "thay nhớt", "thay lốp", "thay phanh"]),
 ]
 
 def categorize(keyword: str) -> str:
