@@ -13,7 +13,8 @@ CORS(app)
 # ---------------------------------------------------------------------------
 DFS_EMAIL    = os.environ.get("DATAFORSEO_EMAIL",    "")
 DFS_PASSWORD = os.environ.get("DATAFORSEO_PASSWORD", "")
-DFS_BASE     = "https://api.dataforseo.com/v3"
+SANDBOX      = os.environ.get("DATAFORSEO_SANDBOX", "false").lower() == "true"
+DFS_BASE     = "https://sandbox.dataforseo.com/v3" if SANDBOX else "https://api.dataforseo.com/v3"
 
 # location_code, language_code per market
 MARKET_MAP = {
@@ -215,7 +216,12 @@ def api_analyze():
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status": "ok", "credentials": bool(DFS_EMAIL and DFS_PASSWORD)})
+    return jsonify({
+        "status": "ok",
+        "credentials": bool(DFS_EMAIL and DFS_PASSWORD),
+        "sandbox": SANDBOX,
+        "api_base": DFS_BASE,
+    })
 
 
 @app.route("/api/test-credentials")
