@@ -1,5 +1,6 @@
 import os
 import json
+import sqlite3
 from collections import defaultdict
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -7,6 +8,30 @@ import requests
 
 app = Flask(__name__)
 CORS(app)
+
+# ---------------------------------------------------------------------------
+# SQLite setup
+# ---------------------------------------------------------------------------
+DB_PATH = os.environ.get("DB_PATH", "rivalscope.db")
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    with get_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS analyses (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain      TEXT    NOT NULL,
+                market      TEXT    NOT NULL,
+                created_at  TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
+                result_json TEXT    NOT NULL
+            )
+        """)
+
+init_db()
 
 # ---------------------------------------------------------------------------
 # DataForSEO config
@@ -219,7 +244,13 @@ def api_analyze():
     results = {}
     for domain in domains:
         try:
-            results[domain] = analyze_domain(domain, location_code, language_code)
+            data = analyze_domain(domain, location_code, language_code)
+            results[domain] = data
+            with get_db() as conn:
+                conn.execute(
+                    "INSERT INTO analyses (domain, market, result_json) VALUES (?, ?, ?)",
+                    (domain, database, json.dumps(data, ensure_ascii=False)),
+                )
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         except requests.exceptions.Timeout:
@@ -228,6 +259,31 @@ def api_analyze():
             results[domain] = {"error": str(exc)}
 
     return jsonify(results)
+
+
+@app.route("/api/history")
+def api_history():
+    limit = min(int(request.args.get("limit", 20)), 100)
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT id, domain, market, created_at FROM analyses ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return jsonify([dict(r) for r in rows])
+
+
+@app.route("/api/history/<int:record_id>")
+def api_history_detail(record_id):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT id, domain, market, created_at, result_json FROM analyses WHERE id = ?",
+            (record_id,),
+        ).fetchone()
+    if not row:
+        return jsonify({"error": "Không tìm thấy record"}), 404
+    data = dict(row)
+    data["result"] = json.loads(data.pop("result_json"))
+    return jsonify(data)
 
 
 @app.route("/api/health")
