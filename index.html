@@ -130,6 +130,8 @@
     .domain-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
     .domain-tab { padding: 7px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: none; color: var(--text-muted); transition: all .2s; }
     .domain-tab.active { background: linear-gradient(135deg,var(--accent),var(--accent2)); color: #fff; border-color: transparent; }
+    .btn-export { padding: 7px 18px; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid rgba(30,207,176,0.4); background: rgba(30,207,176,0.08); color: var(--accent3); transition: all .2s; white-space: nowrap; }
+    .btn-export:hover { background: rgba(30,207,176,0.18); border-color: var(--accent3); }
 
     /* KPIs */
     .kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
@@ -322,7 +324,10 @@
 <section id="results">
   <div class="results-header">
     <div class="results-title">📊 Kết quả phân tích</div>
-    <div class="domain-tabs" id="domainTabs"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="domain-tabs" id="domainTabs"></div>
+      <button class="btn-export" onclick="exportCSV()">⬇ Tải CSV</button>
+    </div>
   </div>
   <div id="resultsBody"></div>
 </section>
@@ -684,6 +689,39 @@ async function loadHistoryRecord(id) {
 }
 
 loadHistory();
+
+/* ── Export CSV ── */
+function exportCSV() {
+  if (!Object.keys(analysisData).length) return;
+
+  const BOM = '﻿'; // giúp Excel đọc đúng tiếng Việt
+  const headers = ['Domain', 'Thị trường', 'Từ khoá', 'Chủ đề', 'Vị trí', 'Volume/tháng', 'Traffic ước tính', 'URL xếp hạng'];
+  const rows = [headers];
+
+  const marketLabel = { vn: 'Việt Nam', us: 'US', sg: 'Singapore', au: 'Australia', gb: 'UK' };
+  const market = marketLabel[currentDatabase] || currentDatabase;
+
+  for (const [domain, data] of Object.entries(analysisData)) {
+    if (data.error) continue;
+    for (const kw of (data.top_keywords || [])) {
+      rows.push([domain, market, kw.keyword, kw.topic, kw.position, kw.volume, kw.etv, kw.url]);
+    }
+  }
+
+  const csv = BOM + rows.map(r =>
+    r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
+  ).join('\r\n');
+
+  const domains = Object.keys(analysisData).join('_');
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = `rivalscope_${domains}_${date}.csv`;
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 </script>
 </body>
 </html>
